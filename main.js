@@ -3,8 +3,43 @@ console.log("Script loaded")
 var temp_data = []
 var label_date = []
 var arr = []
+var mqtt;
+var reconnectTimeout = 2000;
+var host = '127.0.0.1';
+var port = 8083;
+var count = 0
 
+
+function onConnect() {
+    console.log('Connected')
+    console.log("subscribing to the topic")
+    mqtt.subscribe("test-topic")
+    mqtt.onMessageArrived = function (message) {
+    console.log("Message Arrived: " + message.payloadString);
+    if(message.payloadString === 'updated') count ++;
+    if(count === 3) {
+    onLoad()
+    count = 0;
+    }
+}
+}
+
+function MQTTConnect() {
+    console.log('Connecting...')
+    mqtt = new Paho.MQTT.Client(host, port, 'clientJS')
+    var options = {
+        timeout: 3,
+        onSuccess: onConnect,
+    };
+    mqtt.connect(options);
+
+
+
+}
+MQTTConnect()
 var onLoad = function() {
+    var temp_data = []
+    var label_date = []
     var city = 'Patna'
     var t1, t2
     t1 = moment().subtract(1,'days').endOf('day').format("YYYY-MM-DD H:mm");
@@ -13,8 +48,8 @@ var onLoad = function() {
     console.log('todays midnight: ', t2)
     var xhr = new XMLHttpRequest;
     // http://127.0.0.1:5000/get-frame-data?city=Hyderabad&t1=2021-09-04 22:16&t2=2021-09-05 13:17"
-    // var url = 'http://127.0.0.1:5000/get-frame-data?city=' + city + '&t1=' + t1 + '&t2=' + t2
-    var url = 'https://iotsmartcity.herokuapp.com//get-frame-data?city=' + city + '&t1=' + t1 + '&t2=' + t2
+     var url = 'http://127.0.0.1:5000/get-frame-data?city=' + city + '&t1=' + t1 + '&t2=' + t2
+//    var url = 'https://iotsmartcity.herokuapp.com//get-frame-data?city=' + city + '&t1=' + t1 + '&t2=' + t2
     xhr.open('GET', url, true)
     xhr.onload = function() {
         if(this.status == 200) {
